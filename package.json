@@ -1,0 +1,29 @@
+{
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "cloudinary": "^2.1.0",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.3.0",
+    "multer": "^1.4.5-lts.1",
+    "nodemailer": "^6.9.13"
+  },
+  "name": "news-site-backend",
+  "version": "1.0.0",
+  "description": "this is backend server for news api",
+  "main": "index.js",
+  "type": "module",
+  "devDependencies": {
+    "eslint": "^9.0.0",
+    "prettier": "3.2.5"
+  },
+  "scripts": {
+    "lint": "npx eslint '*'",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
