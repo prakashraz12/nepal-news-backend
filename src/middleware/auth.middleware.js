@@ -2,12 +2,12 @@ import { errorHandler } from "../utils/error-handler.util.js";
 import jwt from "jsonwebtoken"; // Importing jwt for token verification
 
 export const verifyJWT = async (req, res, next) => {
+
     try {
         const token = req.cookies.token;
-        console.log(token);
         if (!token) {
             errorHandler(403, "Please login first", res);
-            return; // Don't forget to return to avoid executing further code
+            return; 
         }
 
         // Verify the JWT token

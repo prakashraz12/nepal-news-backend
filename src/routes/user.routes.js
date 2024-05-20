@@ -5,6 +5,7 @@ import {
     forgotPassword,
     loginUser,
     resetPassword,
+    userLogout,
     verifyEmail,
 } from "../controller/user.controller.js";
 
@@ -26,6 +27,9 @@ router.post("/reset-password", resetPassword);
 router.get("/verify-email/:token", verifyEmail);
 
 //resend verify token;
-router.get("/resend-verify-email/:token", ResendVerifyEmail)
+router.get("/resend-verify-email/:token", ResendVerifyEmail);
+
+// logout
+router.get("/logout", userLogout)
 
 export default router;

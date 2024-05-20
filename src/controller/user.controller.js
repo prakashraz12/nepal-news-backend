@@ -97,7 +97,6 @@ export const loginUser = async (req, res) => {
         //set cookies to client user;
         res.cookie("token", token, {
             httpOnly: true,
-            secure: true,
             maxAge: 90 * 24 * 60 * 60 * 1000,
         });
 
@@ -109,7 +108,9 @@ export const loginUser = async (req, res) => {
             phone: findUser?.phone,
             address: findUser?.address,
             avatar: findUser?.avatar,
+            id: findUser._id,
         };
+
         const data = {
             token,
             user: formattedData,
@@ -171,7 +172,8 @@ export const resetPassword = async (req, res) => {
         }
         const resposeData = {};
         // Update user's password
-        user.password = password;
+        const hashedPassword = await bcrypt.hash(password, 10);
+        user.password = hashedPassword;
         user.resetToken = undefined;
         user.resetTokenExpires = undefined;
         await user.save();
@@ -265,6 +267,17 @@ export const ResendVerifyEmail = async (req, res) => {
             responseData,
             res
         );
+    } catch (error) {
+        errorHandler(500, error.message, res);
+    }
+};
+
+// export const user logout;
+export const userLogout = async (req, res) => {
+    try {
+        res.clearCookie("token");
+        const responseData = {};
+        responseHandler(200, "cookie removed succesfully", responseData, res);
     } catch (error) {
         errorHandler(500, error.message, res);
     }

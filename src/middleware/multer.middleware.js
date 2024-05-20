@@ -6,7 +6,7 @@ const storage = multer.diskStorage({
         cb(null, "./public/temp"); // Uploads will be stored in the public/temp
     },
     filename: function (req, file, cb) {
-        cb(null,Date.now() + "-" + file.originalname);
+        cb(null,file.originalname);
     },
 });
 

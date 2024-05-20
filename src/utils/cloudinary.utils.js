@@ -10,22 +10,20 @@ cloudinary.config({
 
 //file uplopad handler;
 export const uploadOnCloudinary = async (localFilePath) => {
-    console.log("localpath", localFilePath)
     try {
         if (!localFilePath) {
             return null;
         }
         //upload the file on cloudinary
-        const cloudinaryResponse = cloudinary.uploader.upload(localFilePath, {
+        const cloudinaryResponse = await cloudinary.uploader.upload(localFilePath, {
             resource_type: "auto",
         });
         //file has been uoload successfully
-        console.log("file uploaded", cloudinaryResponse);
+        fs.unlinkSync(localFilePath); // delte temp saved files after uploaded on cloudinary
+        return cloudinaryResponse;
     } catch (error) {
         //remove unwanted || temp  files from server
         fs.unlinkSync(localFilePath);
         return null;
     }
 };
-
-

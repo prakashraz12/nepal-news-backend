@@ -15,7 +15,7 @@ const newsSchema = new mongoose.Schema(
             required: true,
         },
         isPublished: {
-            type: String,
+            type: Boolean,
             required: true,
         },
         tags: [
@@ -31,7 +31,7 @@ const newsSchema = new mongoose.Schema(
         ],
         owner: {
             type: mongoose.Types.ObjectId,
-            ref: "Reporter",
+            ref: "User",
         },
         isHighlighted: {
             type: Boolean,
@@ -40,12 +40,37 @@ const newsSchema = new mongoose.Schema(
         bannerImage: {
             type: String,
         },
+        province: {
+            type: Number,
+            default: 0,
+        },
+        isShowNewsOnProvince: {
+            type: Boolean,
+            default: false,
+        },
+        isDraft: {
+            type: Boolean,
+            default: false,
+        },
+        views: {
+            type: String,
+            default:0
+        },
         comments: [
             {
                 type: mongoose.Types.ObjectId,
                 ref: "Comment",
             },
         ],
+        menu: {
+            type: mongoose.Types.ObjectId,
+            ref: "Menu",
+            required:true
+        },
+        subMenu: {
+            type: mongoose.Types.ObjectId,
+            ref:"Submenu"
+        }
     },
     { timestamps: true }
 );
