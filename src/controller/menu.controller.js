@@ -5,7 +5,7 @@ import { responseHandler } from "../utils/response-handler.util.js";
 
 // cretae menu
 export const createMenu = async (req, res) => {
-    const { menuTitle, menuOrder, status } = req.body;
+    const { menuTitle, menuOrder, status,isShownOnNavbar, layout  } = req.body;
 
     if (!menuTitle || !menuOrder || !status) {
         return errorHandler(500, "Menu title, order, status  is required", res);
@@ -27,6 +27,8 @@ export const createMenu = async (req, res) => {
             menuTitle,
             menuOrder,
             status,
+            layout,
+            isShownOnNavbar
         });
         await newMenu.save();
         return responseHandler(201, "Menu created successfully", newMenu, res);

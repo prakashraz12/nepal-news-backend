@@ -25,6 +25,12 @@ const userSchema = new mongoose.Schema(
             type: String,
             default: "",
         },
+        comments: [
+            {
+                type: mongoose.Types.ObjectId,
+                ref: "Comment",
+            },
+        ],
         bio: {
             type: String,
             default: "",

@@ -100,7 +100,7 @@ export const loginUser = async (req, res) => {
             maxAge: 90 * 24 * 60 * 60 * 1000,
         });
 
-        console.log(findUser);
+    
         //extract password and usertype and unneeded fields from resposne
         const formattedData = {
             fullName: findUser?.fullName,

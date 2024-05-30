@@ -14,6 +14,15 @@ const menuSchema = new mongoose.Schema(
             type: String,
             required: true,
         },
+        layout: {
+            type: mongoose.Types.ObjectId,
+            required: true,
+            ref: "Layout",
+        },
+        isShownOnNavbar: {
+            type: Boolean,
+            default:true
+        }
     },
     { timestamps: true }
 );
