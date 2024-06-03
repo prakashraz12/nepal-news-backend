@@ -180,13 +180,13 @@ export const updateNews = async (req, res) => {
         isShowNewsOnProvince,
         bannerImage,
     } = req.body;
-    console.log(req.body)
+
     try {
         const user = req.user;
         let bannerImage_url = "";
 
         if (!newsId) {
-            return errorHandler(404, "id is required", res)
+            return errorHandler(404, "id is required", res);
         }
 
         const findNews = await News.findById(newsId);
@@ -209,14 +209,14 @@ export const updateNews = async (req, res) => {
         }
 
         const orginalValue = JSON?.parse(recommendedNews);
-        const orginalTags = JSON?.parse(tags)
+        const orginalTags = JSON?.parse(tags);
         const updateFields = {
             newsTitle,
             shortDescription,
             content,
             isPublished,
-            tags:orginalTags,
-            recommendedNews:orginalValue,
+            tags: orginalTags,
+            recommendedNews: orginalValue,
             isHighlighted,
             isDraft,
             menu,
@@ -224,17 +224,17 @@ export const updateNews = async (req, res) => {
             province,
             isShowNewsOnProvince,
             bannerImage: bannerImage_url,
-
         };
 
-        const updatedNews = await News.findByIdAndUpdate(newsId, updateFields, { new: true });
+        const updatedNews = await News.findByIdAndUpdate(newsId, updateFields, {
+            new: true,
+        });
 
         res.status(200).json(updatedNews);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
-
 
 // Controller function to delete a news article by ID
 export const deleteNewsById = async (req, res) => {
@@ -281,13 +281,14 @@ export const getNewsByMenu = async (req, res) => {
 export const getTrendingNews = async (req, res) => {
     try {
         const { menuId, limit } = req.body;
+        console.log(req.body.menuId);
         let query = {};
-        if (menuId !== "undefined") {
+        if (menuId !== undefined) {
             query.menu = menuId;
         }
 
         const news = await News.find(query)
-            .select("newsTitle")
+            .select("newsTitle views")
             .sort({ createdAt: -1, views: -1, "comments.length": -1 })
             .limit(limit || 10);
 
@@ -310,7 +311,11 @@ export const fetchNews = async (req, res) => {
                 .sort({ createdAt: -1 })
                 .populate("owner", "fullName avatar")
                 .limit(5);
-            return { submenu: submenu.subMenuTitle, news };
+            return {
+                submenu: submenu.subMenuTitle,
+                news,
+                subMenuId: submenu._id,
+            };
         });
 
         const newsBySubmenu = await Promise.all(newsPromises);
@@ -340,5 +345,50 @@ export const fetchNews = async (req, res) => {
     } catch (error) {
         console.error("Error fetching news:", error);
         res.status(500).json({ message: "Server error" });
+    }
+};
+
+export const getNewsBySubMenu = async (req, res) => {
+    try {
+        const { page, limit, subMenuId } = req.query;
+        if (!subMenuId) {
+            return errorHandler(
+                400,
+                "Page, limit, submenu id is required",
+                res
+            );
+        }
+        // Convert page and limit to integers
+        const pageNumber = parseInt(page);
+        const limitNumber = parseInt(limit);
+
+        // Calculate skip value based on page number and limit
+        const skip = (pageNumber - 1) * limitNumber;
+
+        const newsItems = await News.find({ subMenu: subMenuId })
+            .populate("owner", "fullName avatar")
+            .skip(skip)
+            .limit(limitNumber)
+            .exec();
+
+        responseHandler(200, "News fetched successfully", newsItems, res);
+    } catch (error) {
+        errorHandler(500, error.message, res);
+    }
+};
+
+export const moreCommentedNews = async (req, res) => {
+    try {
+        const findNews = await News.find().sort({
+            createdAt: -1,
+            "comments.length": -1,
+        }).limit(10).select("newsTitle").populate("owner", "fullName");
+
+        if (!findNews) {
+            return errorHandler(400, "news not found", res);
+        }
+        responseHandler(200, "news fetched successfully", findNews, res)
+    } catch (error) {
+        errorHandler(500, error.message, res)
     }
 };

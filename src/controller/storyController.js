@@ -1,9 +1,10 @@
 import { CoverStory } from "../models/cover-story.model.js";
+import { Story } from "../models/storyNews.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.utils.js";
 import { errorHandler } from "../utils/error-handler.util.js";
 import { responseHandler } from "../utils/response-handler.util.js";
 
-export const createCoverStory = async (req, res) => {
+export const createStoryNews = async (req, res) => {
     try {
         const logedInUser = req?.user;
         let bannerImage_url = "";
@@ -14,7 +15,6 @@ export const createCoverStory = async (req, res) => {
             isPublished,
             tags,
             recommendedNews,
-            isHighlighted,
             isDraft,
             menu,
             subMenu,
@@ -26,7 +26,7 @@ export const createCoverStory = async (req, res) => {
             bannerImage_url = cloudinaryUpload?.secure_url;
         }
         const orginalValue = JSON?.parse(recommendedNews);
-        const newNews = new CoverStory({
+        const newNews = new Story({
             newsTitle,
             shortDescription,
             content,
@@ -34,7 +34,6 @@ export const createCoverStory = async (req, res) => {
             tags,
             recommendedNews: orginalValue,
             owner: logedInUser,
-            isHighlighted,
             bannerImage: bannerImage_url,
             isDraft,
             menu,
@@ -44,7 +43,7 @@ export const createCoverStory = async (req, res) => {
         const savedNews = await newNews.save();
         return responseHandler(
             201,
-            "News created successfully",
+            "Story News created successfully",
             savedNews,
             res
         );
@@ -53,27 +52,13 @@ export const createCoverStory = async (req, res) => {
     }
 };
 
-export const getAllCoverNews = async (req, res) => {
+export const getAllStoryNews = async (req, res) => {
     try {
-        const { page, limit, startDate, endDate, menu, newsTitle, isPublished } = req.body;
-
-        const skip = (page - 1) * limit;
-        const query = {};
-        if (menu?.length !== 0 && menu !== undefined) {
-            query.menu = menu;
-        }
-
-        if (newsTitle && newsTitle?.length !== 0) {
-            query.newsTitle = { $regex: newsTitle, $options: "i" };
-        }
-        if (isPublished !== undefined) {
-            query.isPublished = isPublished;
-        }
-
-        const storyNews = await CoverStory.find(query).populate("owner", "fullName avatar")
+        const limit = 50;
+        const storyNews = await Story.find()
+            .populate("owner", "fullName avatar")
             .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(limit || 10);
+            .limit(limit || 50);
 
         if (!storyNews) {
             return errorHandler(404, "Cover story not found", res);
@@ -84,15 +69,14 @@ export const getAllCoverNews = async (req, res) => {
     }
 };
 
-
-export const getCoverStoryNewsById = async (req, res) => {
+export const getStoryNewsById = async (req, res) => {
     try {
         const { id } = req.params;
         if (!id) {
             return errorHandler(400, "id is required", res);
         }
 
-        const galleryNews = await CoverStory.findById(id)
+        const galleryNews = await Story.findById(id)
             .populate("owner", "fullName avatar")
             .populate(
                 "recommendedNews",
@@ -102,7 +86,7 @@ export const getCoverStoryNewsById = async (req, res) => {
         if (!galleryNews) {
             return errorHandler(500, "news not found", res);
         }
-        responseHandler(200, "cover news fetched", galleryNews, res);
+        responseHandler(200, "story news fetched", galleryNews, res);
     } catch (error) {
         errorHandler(500, error.message, res);
     }

@@ -46,6 +46,7 @@ import commentRoute from "./routes/comment.routes.js";
 import coverstoryRoute from "./routes/cover-story.routes.js";
 import galleryRoute from "./routes/gallery.routes.js";
 import admin from "./routes/dashboard.routes.js";
+import storyRoutes from "./routes/story.routes.js";
 
 //route declarations;
 app.use("/api/v1/user", userRoute);
@@ -59,5 +60,6 @@ app.use("/api/v1/comment", commentRoute);
 app.use("/api/v1/coverstory", coverstoryRoute);
 app.use("/api/v1/gallery", galleryRoute);
 app.use("/api/v1/admin", admin);
+app.use("/api/v1/story", storyRoutes);
 
 export { app };
