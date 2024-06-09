@@ -2,7 +2,6 @@ import { Router } from "express";
 import { createCoverStory, getAllCoverNews, getCoverStoryNewsById } from "../controller/cover-story.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 import { upload } from "../middleware/multer.middleware.js";
-import { getAllComments } from "../controller/comment.controller.js";
 
 const router = Router();
 

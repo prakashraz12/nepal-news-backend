@@ -75,6 +75,7 @@ export const getAllNews = async (req, res) => {
             menu,
             sort,
             isShowNewsOnProvince,
+            subMenu
         } = req.body;
 
         page = parseInt(page) || 1;
@@ -83,6 +84,9 @@ export const getAllNews = async (req, res) => {
         const query = {};
         if (menu?.length !== 0 && menu !== undefined) {
             query.menu = menu;
+        }
+        if (subMenu?.length !== 0 && subMenu !== undefined) {
+            query.subMenu = subMenu;
         }
 
         if (newsTitle && newsTitle?.length !== 0) {
@@ -278,6 +282,7 @@ export const getNewsByMenu = async (req, res) => {
     }
 };
 
+// 
 export const getTrendingNews = async (req, res) => {
     try {
         const { menuId, limit } = req.body;
@@ -298,7 +303,6 @@ export const getTrendingNews = async (req, res) => {
     }
 };
 
-// Assuming you have already defined your News schema and imported necessary modules
 
 export const fetchNews = async (req, res) => {
     try {
@@ -392,3 +396,23 @@ export const moreCommentedNews = async (req, res) => {
         errorHandler(500, error.message, res)
     }
 };
+
+export const provinceNews = async (req, res) => {
+    try {
+        const provinces = [1, 2, 3, 4, 5, 6, 7];
+
+        const provinceNews = {};
+
+        for (const provinceNumber of provinces) {
+            const news = await News.find({ isShowNewsOnProvince: true, province:provinceNumber }).limit(10).populate("owner", "fullName avatar");
+            provinceNews[`${provinceNumber}`] = news;
+        }
+
+        responseHandler(200, "province news fetched", provinceNews, res);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+}
+
+

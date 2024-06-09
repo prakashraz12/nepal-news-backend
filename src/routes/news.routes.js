@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createNews, fetchNews, getAllNews, getNewsById, getNewsByMenu, getNewsBySubMenu, getTrendingNews, moreCommentedNews, updateNews } from "../controller/news.controller.js";
+import { createNews, fetchNews, getAllNews, getNewsById, getNewsByMenu, getNewsBySubMenu, getTrendingNews, moreCommentedNews, provinceNews, updateNews } from "../controller/news.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 import { upload } from "../middleware/multer.middleware.js";
 
@@ -31,6 +31,9 @@ router.post("/update", verifyJWT, upload.single("file"), updateNews);
 router.post("/get/submenu", getNewsBySubMenu);
 
 // routes to get news;
-router.get("/get/morecomment/:id", moreCommentedNews)
+router.get("/get/morecomment/:id", moreCommentedNews);
+
+// routes to get Porvince news;
+router.get("/province", provinceNews)
 
 export default router;
