@@ -12,21 +12,21 @@ const allowedOrigins = [
 const app = express();
 
 app.use(
-  cors({
-      origin: function (origin, callback) {
-         
-          if (!origin || allowedOrigins.includes(origin)) {
-           
-              callback(null, true);
-          } else {
-            
-              callback(new Error("Not allowed by CORS"));
-          }
-      },
-      methods: "GET,POST,PUT,DELETE",
-    credentials: true,
-      
-  })
+    cors({
+        origin: function (origin, callback) {
+
+            if (!origin || allowedOrigins.includes(origin)) {
+
+                callback(null, true);
+            } else {
+
+                callback(new Error("Not allowed by CORS"));
+            }
+        },
+        methods: "GET,POST,PUT,DELETE",
+        credentials: true,
+
+    })
 );
 
 app.use(express.json({ limit: "2mb" }));
@@ -47,6 +47,7 @@ import coverstoryRoute from "./routes/cover-story.routes.js";
 import galleryRoute from "./routes/gallery.routes.js";
 import admin from "./routes/dashboard.routes.js";
 import storyRoutes from "./routes/story.routes.js";
+import adsRoutes from "./routes/ads.routes.js";
 
 //route declarations;
 app.use("/api/v1/user", userRoute);
@@ -61,5 +62,6 @@ app.use("/api/v1/coverstory", coverstoryRoute);
 app.use("/api/v1/gallery", galleryRoute);
 app.use("/api/v1/admin", admin);
 app.use("/api/v1/story", storyRoutes);
+app.use("/api/v1/ads", adsRoutes);
 
 export { app };
