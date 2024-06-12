@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getSettings } from "../controller/settings.controller.js";
+import { createSettings, getSettings } from "../controller/settings.controller.js";
 import { createLayout } from "../controller/layout.controller.js";
 
 
@@ -9,6 +9,9 @@ const router = Router();
 router.get("/get", getSettings);
 
 // routes to create layout;
-router.post("/layout/create", createLayout)
+router.post("/layout/create", createLayout);
+
+//  routes to create settings;
+router.post("/create", createSettings)
 
 export default router;

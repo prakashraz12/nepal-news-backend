@@ -2,6 +2,7 @@ import { Router } from "express";
 import { createNews, fetchNews, getAllNews, getNewsById, getNewsByMenu, getNewsBySubMenu, getTrendingNews, moreCommentedNews, provinceNews, updateNews } from "../controller/news.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 import { upload } from "../middleware/multer.middleware.js";
+import { searchController } from "../controller/newsSearch.controller.js";
 
 
 const router = Router();
@@ -34,6 +35,9 @@ router.post("/get/submenu", getNewsBySubMenu);
 router.get("/get/morecomment/:id", moreCommentedNews);
 
 // routes to get Porvince news;
-router.get("/province", provinceNews)
+router.get("/province", provinceNews);
+
+//routes to search news;
+router.post("/all/search", searchController)
 
 export default router;

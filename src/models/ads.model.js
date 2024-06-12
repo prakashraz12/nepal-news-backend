@@ -10,7 +10,7 @@ const adsSchema = new mongoose.Schema({
         required:true
     },
     adsClickedCount:{
-        type:String,
+        type:Number,
         required:true,
         default:0
     },
