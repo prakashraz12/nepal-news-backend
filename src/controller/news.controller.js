@@ -125,7 +125,7 @@ export const getAllNews = async (req, res) => {
         const count = await News.countDocuments(query);
         const totalPages = Math.ceil(count / limit);
 
-        const allNews = await News.find(query)
+        const allNews = await News.find(query).select("newsTitle shortDescription createdAt bannerImage")
             .skip((page - 1) * limit)
             .limit(limit)
             .sort({ createdAt: sort && sort === "asc" ? 1 : -1 })

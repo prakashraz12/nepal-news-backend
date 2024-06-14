@@ -100,10 +100,9 @@ export const loginUser = async (req, res) => {
             httpOnly: true,
             maxAge: 90 * 24 * 60 * 60 * 1000,
             sameSite: "none",
-            secure: true
+            secure: true,
         });
 
-    
         //extract password and usertype and unneeded fields from resposne
         const formattedData = {
             fullName: findUser?.fullName,
@@ -289,7 +288,7 @@ export const userLogout = async (req, res) => {
 export const updatePassword = async (req, res) => {
     try {
         const { oldPassword, newPassword } = req.body;
-        
+
         const user = req.user;
         if (!oldPassword || !newPassword) {
             return errorHandler(
@@ -311,11 +310,11 @@ export const updatePassword = async (req, res) => {
             );
         }
 
-       const  isOldPasswordCorrect = await bcrypt.compare(
-           oldPassword,
-            findUser.password,
+        const isOldPasswordCorrect = await bcrypt.compare(
+            oldPassword,
+            findUser.password
         );
-        
+
         if (!isOldPasswordCorrect) {
             return errorHandler(404, "old password is incorrect", res);
         }

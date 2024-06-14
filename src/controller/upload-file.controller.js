@@ -14,7 +14,6 @@ export const fileUpload = async (req, res) => {
         };
         return responseHandler(200, "Upload successfully", resposeObject, res);
     } catch (error) {
-        console.log("error", error)
         errorHandler(500, error?.message, res);
     }
 };

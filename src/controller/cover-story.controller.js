@@ -55,7 +55,7 @@ export const createCoverStory = async (req, res) => {
 
 export const getAllCoverNews = async (req, res) => {
     try {
-        const { page, limit, startDate, endDate, menu, newsTitle, isPublished } = req.body;
+        const { page, limit, menu, newsTitle, isPublished } = req.body;
 
         const skip = (page - 1) * limit;
         const query = {};
@@ -70,7 +70,7 @@ export const getAllCoverNews = async (req, res) => {
             query.isPublished = isPublished;
         }
 
-        const storyNews = await CoverStory.find(query).populate("owner", "fullName avatar")
+        const storyNews = await CoverStory.find(query).select("newsTitle shortDescription createdAt bannerImage").populate("owner", "fullName avatar")
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit || 10);

@@ -59,8 +59,6 @@ export const getAllGalleryNews = async (req, res) => {
         const {
             page,
             limit,
-            startDate,
-            endDate,
             menu,
             newsTitle,
             isPublished,
@@ -79,7 +77,7 @@ export const getAllGalleryNews = async (req, res) => {
             query.isPublished = isPublished;
         }
 
-        const galleryNews = await Gallery.find(query)
+        const galleryNews = await Gallery.find(query).select("newsTitle shortDescription createdAt bannerImage")
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit || 10);

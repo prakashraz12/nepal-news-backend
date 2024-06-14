@@ -392,7 +392,7 @@ export const getCommentByOwnerId = async (req, res) => {
 
         const findComment = await Comment.find({ owner: userId }).populate("news", "newsTitle").sort({
             createdAt: -1,
-        });
+        }).limit(50);
         
         if (!findComment) {
             errorHandler(404, "comment not found", res);

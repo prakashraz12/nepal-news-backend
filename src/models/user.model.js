@@ -8,7 +8,7 @@ const userSchema = new mongoose.Schema(
         },
         password: {
             type: String,
-            required: true,
+           default:""
         },
         email: {
             type: String,
@@ -42,6 +42,10 @@ const userSchema = new mongoose.Schema(
         isBlocked: {
             type: Boolean,
             default: false,
+        },
+        google_auth: {
+            type: Boolean,
+            default:false
         },
         resetToken: String,
         resetTokenExpires: Date,

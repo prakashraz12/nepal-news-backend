@@ -53,7 +53,11 @@ const newsSchema = new mongoose.Schema(
             default: false,
         },
         views: {
-            type: String,
+            type: Number,
+            default:0
+        },
+        shares: {
+            type: Number,
             default:0
         },
         comments: [
