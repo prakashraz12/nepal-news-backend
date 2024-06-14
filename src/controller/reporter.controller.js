@@ -100,8 +100,6 @@ export const loginReporter = async (req, res) => {
             secure: true,
             maxAge: 90 * 24 * 60 * 60 * 1000,
         });
-
-        console.log(findUser);
         //extract password and usertype and unneeded fields from resposne
         const formattedData = {
             fullName: findUser?.fullName,
@@ -161,7 +159,7 @@ export const resetPassword = async (req, res) => {
             resetToken: token,
             resetTokenExpires: { $gt: Date.now() },
         });
-        console.log(user);
+
         if (!user) {
             return errorHandler(
                 400,

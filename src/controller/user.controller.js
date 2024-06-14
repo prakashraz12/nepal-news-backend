@@ -13,7 +13,6 @@ export const createNewUser = async (req, res) => {
         const { fullName, email, phone, password } = req.body;
         // Check if all required fields are provided
         if (!fullName || !email || !password) {
-            console.log("hello");
             return errorHandler(
                 400,
                 "Please fill all required fields (e.g., email, password, fullname)",
@@ -164,7 +163,6 @@ export const resetPassword = async (req, res) => {
             resetToken: token,
             resetTokenExpires: { $gt: Date.now() },
         });
-        console.log(user);
         if (!user) {
             return errorHandler(
                 400,

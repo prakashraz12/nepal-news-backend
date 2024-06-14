@@ -85,7 +85,7 @@ export const clickedCountOnAds = async (req, res) => {
 export const updateAds = async (req, res) => {
     try {
         const { adsId, adsUrl, adsImage, adsPosition } = req.body;
-        console.log(req.body)
+     
         if (!adsId) {
             return errorHandler(400, "Ads ID required", res);
         }

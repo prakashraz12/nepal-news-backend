@@ -56,8 +56,8 @@ export const getAllStoryNews = async (req, res) => {
     try {
         const limit = 50;
         const storyNews = await Story.find()
-            .select("bannerImage")
-            .populate("owner", "fullName")
+            .select("bannerImage createdAt")
+            .populate("owner", "fullName avatar")
             .sort({ createdAt: -1 })
             .limit(limit || 50);
 

@@ -286,7 +286,6 @@ export const getNewsByMenu = async (req, res) => {
 export const getTrendingNews = async (req, res) => {
     try {
         const { menuId, limit } = req.body;
-        console.log(req.body.menuId);
         let query = {};
         if (menuId !== undefined) {
             query.menu = menuId;
