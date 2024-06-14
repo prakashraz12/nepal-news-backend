@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
     ResendVerifyEmail,
+    continueWithGoogle,
     createNewUser,
     forgotPassword,
     loginUser,
