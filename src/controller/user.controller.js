@@ -5,6 +5,7 @@ import { User } from "../models/user.model.js";
 import { errorHandler } from "../utils/error-handler.util.js";
 import { responseHandler } from "../utils/response-handler.util.js";
 import { transporter } from "../utils/nodemailer.js";
+import { uploadOnCloudinary } from "../utils/cloudinary.utils.js";
 
 // user create
 export const createNewUser = async (req, res) => {
@@ -280,6 +281,186 @@ export const userLogout = async (req, res) => {
         res.clearCookie("token");
         const responseData = {};
         responseHandler(200, "cookie removed succesfully", responseData, res);
+    } catch (error) {
+        errorHandler(500, error.message, res);
+    }
+};
+
+export const updatePassword = async (req, res) => {
+    try {
+        const { oldPassword, newPassword } = req.body;
+        
+        const user = req.user;
+        if (!oldPassword || !newPassword) {
+            return errorHandler(
+                400,
+                "old password and new password is required",
+                res
+            );
+        }
+        const findUser = await User.findById(user);
+        if (!findUser) {
+            return errorHandler(404, "user not found", res);
+        }
+
+        if (!findUser.password && findUser.google_auth) {
+            return errorHandler(
+                500,
+                "you not set password yet, login with google",
+                res
+            );
+        }
+
+       const  isOldPasswordCorrect = await bcrypt.compare(
+           oldPassword,
+            findUser.password,
+        );
+        
+        if (!isOldPasswordCorrect) {
+            return errorHandler(404, "old password is incorrect", res);
+        }
+
+        const saltedPassword = await bcrypt.hash(newPassword, 10);
+
+        findUser.password = saltedPassword;
+
+        findUser.save();
+        const response = {};
+        responseHandler(200, "password updated", response, res);
+    } catch (error) {
+        errorHandler(500, error?.message, res);
+    }
+};
+
+export const continueWithGoogle = async (req, res) => {
+    try {
+        const { access_token } = req.query;
+        //send token to firebase that extract user deatils by token
+        const data = await getAuth().verifyIdToken(access_token);
+        //find user if already exists in database
+        const { email, name, picture } = data;
+
+        const findUser = await User.findOne({ email });
+
+        //if already in databse
+        if (findUser) {
+            if (!findUser.google_auth) {
+                return errorHandler(
+                    403,
+                    "This is email already exist please login with password.",
+                    res
+                );
+            }
+
+            const token = jwt.sign(
+                { userId: findUser?._id, role: findUser?.userType },
+                process.env.JWT_SECRET,
+                {
+                    expiresIn: "90d",
+                }
+            );
+
+            //set cookies to client user;
+            res.cookie("token", token, {
+                httpOnly: true,
+                maxAge: 90 * 24 * 60 * 60 * 1000,
+                sameSite: "none",
+                secure: true,
+            });
+
+            const formattedData = {
+                fullName: findUser?.fullName,
+                email: findUser?.email,
+                phone: findUser?.phone,
+                address: findUser?.address,
+                avatar: findUser?.avatar,
+                id: findUser._id,
+            };
+
+            const data = {
+                token,
+                user: formattedData,
+            };
+
+            return responseHandler(200, "User logedin Successfully", data, res);
+        } else {
+            const newUser = await User.create({
+                fullName: name,
+                email,
+                avatar: picture,
+                google_auth: true,
+            });
+
+            await newUser.save();
+            const token = jwt.sign(
+                { userId: findUser?._id, role: findUser?.userType },
+                process.env.JWT_SECRET,
+                {
+                    expiresIn: "90d",
+                }
+            );
+
+            //set cookies to client user;
+            res.cookie("token", token, {
+                httpOnly: true,
+                maxAge: 90 * 24 * 60 * 60 * 1000,
+                sameSite: "none",
+                secure: true,
+            });
+
+            const formattedData = {
+                fullName: newUser?.fullName,
+                email: newUser?.email,
+                phone: newUser?.phone,
+                address: newUser?.address,
+                avatar: newUser?.avatar,
+                id: newUser._id,
+            };
+
+            const data = {
+                token,
+                user: formattedData,
+            };
+
+            return responseHandler(
+                201,
+                "User Register Successfully",
+                data,
+                res
+            );
+        }
+    } catch (error) {
+        errorHandler(500, error?.message, res);
+    }
+};
+
+export const updateUser = async (req, res) => {
+    const { fullName, email, phone } = req.body;
+    try {
+        const userId = req.user;
+        const findUser = await User.findById(userId);
+        if (!findUser) {
+            return errorHandler(404, "user not found", res);
+        }
+
+        if (req?.file) {
+            const bannerImage = req.file?.path;
+            const cloudinaryUpload = await uploadOnCloudinary(bannerImage);
+            findUser.avatar = cloudinaryUpload?.secure_url;
+        }
+
+        findUser.fullName = fullName;
+        findUser.email = email;
+        findUser.phone = phone;
+
+        await findUser.save();
+        const response = {
+            fullName: findUser.fullName,
+            email: findUser.email,
+            phone: findUser.phone,
+            avatar: findUser?.avatar,
+        };
+        responseHandler(200, "user's data udpated", response, res);
     } catch (error) {
         errorHandler(500, error.message, res);
     }

@@ -5,6 +5,7 @@ import {
     deleteReplies,
     dislikeComment,
     getAllComments,
+    getCommentByOwnerId,
     likeComment,
     repliedComment,
     updateComment,
@@ -40,4 +41,6 @@ router.post("/update", verifyJWT, updateComment);
 // routes to update comment replies;
 router.post("/update/reply", verifyJWT, updateRepliesComment);
 
+// routes  to get comment by owner's id;
+router.get("/mycomment/me",  verifyJWT, getCommentByOwnerId)
 export default router;

@@ -5,9 +5,13 @@ import {
     forgotPassword,
     loginUser,
     resetPassword,
+    updatePassword,
+    updateUser,
     userLogout,
     verifyEmail,
 } from "../controller/user.controller.js";
+import { verifyJWT } from "../middleware/auth.middleware.js";
+import { upload } from "../middleware/multer.middleware.js";
 
 const router = Router();
 
@@ -30,6 +34,12 @@ router.get("/verify-email/:token", verifyEmail);
 router.get("/resend-verify-email/:token", ResendVerifyEmail);
 
 // logout
-router.get("/logout", userLogout)
+router.get("/logout", userLogout);
+
+// routes to update user;
+router.put("/update/me", verifyJWT, upload.single("file"), updateUser);
+
+// routes to update password;
+router.post("/update/password", verifyJWT, updatePassword);
 
 export default router;
