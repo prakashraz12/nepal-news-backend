@@ -36,6 +36,9 @@ router.get("/resend-verify-email/:token", ResendVerifyEmail);
 // logout
 router.get("/logout", userLogout);
 
+// continue with google
+router.get("/with-google", continueWithGoogle);
+
 // routes to update user;
 router.put("/update/me", verifyJWT, upload.single("file"), updateUser);
 
