@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-
+import { getAuth } from "firebase-admin/auth";
 import { User } from "../models/user.model.js";
 import { errorHandler } from "../utils/error-handler.util.js";
 import { responseHandler } from "../utils/response-handler.util.js";
