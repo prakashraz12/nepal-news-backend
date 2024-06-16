@@ -15,7 +15,8 @@ export const uploadOnCloudinary = async (localFilePath) => {
             return null;
         }
         //upload the file on cloudinary
-        const cloudinaryResponse = await cloudinary.uploader.upload(localFilePath, {
+        const cloudinaryResponse = await cloudinary.uploader.upload(localFilePath,
+             {
             resource_type: "auto",
         });
         //file has been uoload successfully

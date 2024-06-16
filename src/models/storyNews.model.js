@@ -39,8 +39,12 @@ const storySchema = new mongoose.Schema(
             type: String,
         },
         views: {
-            type: String,
+            type: Number,
             default: 0,
+        },
+        shares: {
+            type: Number,
+            default:0
         },
         comments: [
             {

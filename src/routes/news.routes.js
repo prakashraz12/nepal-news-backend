@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createNews, fetchNews, getAllNews, getNewsById, getNewsByMenu, getNewsBySubMenu, getTrendingNews, moreCommentedNews, provinceNews, updateNews } from "../controller/news.controller.js";
+import { createNews, fetchNews, getAllNews, getNewsById, getNewsByMenu, getNewsBySubMenu, getTrendingNews, moreCommentedNews, provinceNews, shareCountIncreament, updateNews } from "../controller/news.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 import { upload } from "../middleware/multer.middleware.js";
 import { searchController } from "../controller/newsSearch.controller.js";
@@ -38,6 +38,9 @@ router.get("/get/morecomment/:id", moreCommentedNews);
 router.get("/province", provinceNews);
 
 //routes to search news;
-router.post("/all/search", searchController)
+router.post("/all/search", searchController);
+
+//routes to incremanet news shares count;
+router.put("/inc/shares", shareCountIncreament)
 
 export default router;

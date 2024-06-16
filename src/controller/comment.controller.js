@@ -257,7 +257,7 @@ export const deleteReplies = async (req, res) => {
 
         const comment = await Comment.findById(commentId);
         let findNews = null;
-        
+
         if (type === "coverstory") {
             findNews = await CoverStory.findOne({ comments: commentId });
         } else if (type === "gallery") {
@@ -383,23 +383,24 @@ export const updateRepliesComment = async (req, res) => {
 
 export const getCommentByOwnerId = async (req, res) => {
     try {
-
         const userId = req.user;
         if (!userId) {
             return errorHandler(404, "user not found", res);
         }
-  
 
-        const findComment = await Comment.find({ owner: userId }).populate("news", "newsTitle").sort({
-            createdAt: -1,
-        }).limit(50);
-        
+        const findComment = await Comment.find({ owner: userId })
+            .populate("news", "newsTitle")
+            .sort({
+                createdAt: -1,
+            })
+            .limit(50);
+
         if (!findComment) {
             errorHandler(404, "comment not found", res);
         }
 
         responseHandler(200, "comment fetched successFully", findComment, res);
     } catch (error) {
-       errorHandler(500, error?.message, res)
+        errorHandler(500, error?.message, res);
     }
 };

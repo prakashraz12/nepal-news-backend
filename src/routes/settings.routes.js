@@ -1,7 +1,10 @@
 import { Router } from "express";
-import { createSettings, getSettings } from "../controller/settings.controller.js";
+import {
+    createSettings,
+    getSettings,
+    updatePopUpAds,
+} from "../controller/settings.controller.js";
 import { createLayout } from "../controller/layout.controller.js";
-
 
 const router = Router();
 
@@ -12,6 +15,10 @@ router.get("/get", getSettings);
 router.post("/layout/create", createLayout);
 
 //  routes to create settings;
-router.post("/create", createSettings)
+router.post("/create", createSettings);
+
+// routes to update popup  ads;
+
+router.put("/update/ads", updatePopUpAds);
 
 export default router;

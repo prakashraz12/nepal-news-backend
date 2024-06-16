@@ -1,4 +1,7 @@
+import { CoverStory } from "../models/cover-story.model.js";
+import { Gallery } from "../models/gallery.model.js";
 import { News } from "../models/news.model.js";
+import { Story } from "../models/storyNews.model.js";
 import { SubMenu } from "../models/subMenu.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.utils.js";
 import { errorHandler } from "../utils/error-handler.util.js";
@@ -75,7 +78,7 @@ export const getAllNews = async (req, res) => {
             menu,
             sort,
             isShowNewsOnProvince,
-            subMenu
+            subMenu,
         } = req.body;
 
         page = parseInt(page) || 1;
@@ -125,7 +128,8 @@ export const getAllNews = async (req, res) => {
         const count = await News.countDocuments(query);
         const totalPages = Math.ceil(count / limit);
 
-        const allNews = await News.find(query).select("newsTitle shortDescription createdAt bannerImage")
+        const allNews = await News.find(query)
+            .select("newsTitle shortDescription createdAt bannerImage")
             .skip((page - 1) * limit)
             .limit(limit)
             .sort({ createdAt: sort && sort === "asc" ? 1 : -1 })
@@ -282,7 +286,7 @@ export const getNewsByMenu = async (req, res) => {
     }
 };
 
-// 
+//
 export const getTrendingNews = async (req, res) => {
     try {
         const { menuId, limit } = req.body;
@@ -301,7 +305,6 @@ export const getTrendingNews = async (req, res) => {
         errorHandler(500, error.message, res);
     }
 };
-
 
 export const fetchNews = async (req, res) => {
     try {
@@ -382,17 +385,21 @@ export const getNewsBySubMenu = async (req, res) => {
 
 export const moreCommentedNews = async (req, res) => {
     try {
-        const findNews = await News.find().sort({
-            createdAt: -1,
-            "comments.length": -1,
-        }).limit(10).select("newsTitle").populate("owner", "fullName");
+        const findNews = await News.find()
+            .sort({
+                createdAt: -1,
+                "comments.length": -1,
+            })
+            .limit(10)
+            .select("newsTitle")
+            .populate("owner", "fullName");
 
         if (!findNews) {
             return errorHandler(400, "news not found", res);
         }
-        responseHandler(200, "news fetched successfully", findNews, res)
+        responseHandler(200, "news fetched successfully", findNews, res);
     } catch (error) {
-        errorHandler(500, error.message, res)
+        errorHandler(500, error.message, res);
     }
 };
 
@@ -403,7 +410,12 @@ export const provinceNews = async (req, res) => {
         const provinceNews = {};
 
         for (const provinceNumber of provinces) {
-            const news = await News.find({ isShowNewsOnProvince: true, province:provinceNumber }).limit(10).populate("owner", "fullName avatar");
+            const news = await News.find({
+                isShowNewsOnProvince: true,
+                province: provinceNumber,
+            })
+                .limit(10)
+                .populate("owner", "fullName avatar");
             provinceNews[`${provinceNumber}`] = news;
         }
 
@@ -412,6 +424,48 @@ export const provinceNews = async (req, res) => {
         console.error(error);
         res.status(500).json({ message: "Internal server error" });
     }
-}
+};
 
+export const shareCountIncreament = async (req, res) => {
+    try {
+        const { newsId, newsType } = req.body;
+        if (!newsId || !newsType) {
+            return errorHandler(400, "news id and newsType is undefined", res);
+        }
+        let news;
 
+        if (newsType === "coverstory") {
+            news = await CoverStory.findByIdAndUpdate(
+                newsId,
+                { $inc: { shares: 1 } },
+                { new: true }
+            );
+        } else if (newsType === "gallery") {
+            news = await Gallery.findByIdAndUpdate(
+                newsId,
+                { $inc: { shares: 1 } },
+                { new: true }
+            );
+        } else if (newsType === "story") {
+            news = await Story.findByIdAndUpdate(
+                newsId,
+                { $inc: { shares: 1 } },
+                { new: true }
+            );
+        } else {
+            news = await News.findByIdAndUpdate(
+                newsId,
+                { $inc: { shares: 1 } },
+                { new: true }
+            );
+        }
+
+        if (!news) {
+            return errorHandler(404, "news not found", res);
+        }
+
+        responseHandler(200, "share count inc successfully", news, res);
+    } catch (error) {
+        errorHandler(500, error.message, res);
+    }
+};
