@@ -1,25 +1,94 @@
 import { Router } from "express";
-import { createNewReporter, loginReporter } from "../controller/reporter.controller.js";
+import {
+    createNewReporter,
+    getAllReporterStoryNews,
+    getReporter,
+    getReporterById,
+    getReporterCoverStoryNews,
+    getReporters,
+    loginReporter,
+    meReporterUpdate,
+    reporterForgetPassword,
+    searchReporterGalleryNews,
+    searchReporterNews,
+    updateReporter,
+} from "../controller/reporter.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
+import { verifyRole } from "../middleware/authorization.middlware.js";
+
+import { upload } from "../middleware/multer.middleware.js";
+import { isBlockedUser } from "../middleware/isBlockedUser.middleware.js";
 
 const router = Router();
 
 //routes to create reporter
-router.post("/create",verifyJWT, createNewReporter);
+router.post("/create", verifyJWT, createNewReporter);
 
 //login reporter
 router.post("/login", loginReporter);
 
- //forgot password
-// router.post("/forgot-password", forgotPassword);
+router.post("/get/All", verifyJWT, getReporters);
 
-// //reset password
-// router.post("/reset-password", resetPassword);
+// routes to get reporter by id;
+router.get("/get/:id", getReporterById);
 
-// //verify email
-// router.get("/verify-email/:token", verifyEmail);
+//routes to update reporter;
+router.put(
+    "/update",
+    verifyJWT,
+    verifyRole(["admin", "reporter"]),
+    updateReporter
+);
 
-// //resend verify token;
-// router.get("/resend-verify-email/:token", ResendVerifyEmail)
+//routes to get reporter profile;
+router.get("/me", verifyJWT, verifyRole(["admin", "reporter"]), getReporter);
 
+//routes to get reporter news;
+router.post(
+    "/news/search",
+    verifyJWT,
+    isBlockedUser,
+    verifyRole("reporter"),
+    searchReporterNews
+);
+
+//routes to get gallery news;
+router.post(
+    "/gallery/search",
+    verifyJWT,
+    isBlockedUser,
+    verifyRole("reporter"),
+    searchReporterGalleryNews
+);
+
+// routes  to cover story news;
+router.post(
+    "/coverstory/search",
+    verifyJWT,
+    isBlockedUser,
+    verifyRole("reporter"),
+    getReporterCoverStoryNews
+);
+
+// routes to get all story news;
+router.post(
+    "/story/search",
+    verifyJWT,
+    isBlockedUser,
+    verifyRole("reporter"),
+    getAllReporterStoryNews
+);
+
+//router to update;
+router.put(
+    "/me/update",
+    verifyJWT,
+    upload.single("file"),
+    isBlockedUser,
+    verifyRole("reporter"),
+    meReporterUpdate
+);
+
+//router to reporter reset password;
+router.post("/reset-password", reporterForgetPassword); 
 export default router;

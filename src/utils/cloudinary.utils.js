@@ -15,10 +15,12 @@ export const uploadOnCloudinary = async (localFilePath) => {
             return null;
         }
         //upload the file on cloudinary
-        const cloudinaryResponse = await cloudinary.uploader.upload(localFilePath,
-             {
-            resource_type: "auto",
-        });
+        const cloudinaryResponse = await cloudinary.uploader.upload(
+            localFilePath,
+            {
+                resource_type: "auto",
+            }
+        );
         //file has been uoload successfully
         fs.unlinkSync(localFilePath); // delte temp saved files after uploaded on cloudinary
         return cloudinaryResponse;

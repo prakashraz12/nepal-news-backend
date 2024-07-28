@@ -6,6 +6,11 @@ const storySchema = new mongoose.Schema(
             type: String,
             required: true,
         },
+        slug: {
+            type: String,
+            required: true,
+            unique:true
+        },
         shortDescription: {
             type: String,
             required: true,

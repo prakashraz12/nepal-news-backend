@@ -6,6 +6,11 @@ const newsSchema = new mongoose.Schema(
             type: String,
             required: true,
         },
+        slug: {
+            type: String,
+            required: true,
+            unique: true,
+        },
         shortDescription: {
             type: String,
             required: true,
@@ -54,11 +59,11 @@ const newsSchema = new mongoose.Schema(
         },
         views: {
             type: Number,
-            default:0
+            default: 0,
         },
         shares: {
             type: Number,
-            default:0
+            default: 0,
         },
         comments: [
             {
@@ -69,12 +74,12 @@ const newsSchema = new mongoose.Schema(
         menu: {
             type: mongoose.Types.ObjectId,
             ref: "Menu",
-            required:true
+            required: true,
         },
         subMenu: {
             type: mongoose.Types.ObjectId,
-            ref:"Submenu"
-        }
+            ref: "Submenu",
+        },
     },
     { timestamps: true }
 );

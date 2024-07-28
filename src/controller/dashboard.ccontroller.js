@@ -14,6 +14,7 @@ export const dashboard = async (req, res) => {
         const totalGallery = await Gallery.countDocuments();
         const totalSubMenu = await SubMenu.countDocuments();
         const totalUsers = await User.countDocuments({ userType: "user" });
+        const totalReporters = await User.countDocuments({ userType: "reporter" });
         const recentNews = await News.find().sort({ createdAt: -1 }).limit(10);
 
         // Calculate the start and end date for the last 7 days
@@ -87,6 +88,7 @@ export const dashboard = async (req, res) => {
             weeklyData,
             weeklyDataCount: { startDate, endDate },
             menuCountDataStc,
+            totalReporters
         };
 
         responseHandler(200, "dashboard", response, res);

@@ -1,4 +1,4 @@
-import { errorHandler } from "../utils/error-handler.util";
+import { errorHandler } from "../utils/error-handler.util.js";
 
 export const verifyRole = (requiredRoles) => {
     return async (req, res, next) => {

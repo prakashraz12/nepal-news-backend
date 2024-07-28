@@ -1,14 +1,16 @@
 import { Router } from "express";
-import { createNews, fetchNews, getAllNews, getNewsById, getNewsByMenu, getNewsBySubMenu, getTrendingNews, moreCommentedNews, provinceNews, shareCountIncreament, updateNews } from "../controller/news.controller.js";
+import { bulkNewsUpdate, createNews, fetchNews, getAllNews, getNewsById, getNewsByMenu, getNewsBySubMenu, getTrendingNews, moreCommentedNews, provinceNews, shareCountIncreament, updateNews } from "../controller/news.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 import { upload } from "../middleware/multer.middleware.js";
 import { searchController } from "../controller/newsSearch.controller.js";
+import { verifyRole } from "../middleware/authorization.middlware.js";
+import { isBlockedUser } from "../middleware/isBlockedUser.middleware.js";
 
 
 const router = Router();
 
 //routes to create news
-router.post("/create", verifyJWT, upload.single("file"), createNews);
+router.post("/create", verifyJWT, isBlockedUser, verifyRole(["admin", "reporter"]), upload.single("file"), createNews);
 
 // routes to get all news with pagination and search;
 router.post("/search", getAllNews);
@@ -43,4 +45,5 @@ router.post("/all/search", searchController);
 //routes to incremanet news shares count;
 router.put("/inc/shares", shareCountIncreament)
 
+router.put("/bulk", bulkNewsUpdate)
 export default router;

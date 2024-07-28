@@ -1,6 +1,13 @@
 import { Router } from "express";
 import { verifyJWT } from "../middleware/auth.middleware.js";
-import { clickedCountOnAds, createAds, deleteAds, getAdsByPosition, updateAds } from "../controller/ads.controller.js";
+import {
+    clickedCountOnAds,
+    createAds,
+    deleteAds,
+    getAdsByPosition,
+    getAllAds,
+    updateAds,
+} from "../controller/ads.controller.js";
 import { upload } from "../middleware/multer.middleware.js";
 
 const router = Router();
@@ -18,7 +25,9 @@ router.get("/click/:id", clickedCountOnAds);
 router.put("/update", verifyJWT, upload.single("file"), updateAds);
 
 //routes to delete ads;
-router.get("/delete/:id",deleteAds)
+router.get("/delete/:id", deleteAds);
 
+// routes to get all ads
+router.get("/getAllAds", getAllAds);
 
 export default router;

@@ -10,7 +10,7 @@ import { uploadOnCloudinary } from "../utils/cloudinary.utils.js";
 // user create
 export const createNewUser = async (req, res) => {
     try {
-        const { fullName, email, phone, password } = req.body;
+        const { fullName, email, phone, password, userType } = req.body;
         // Check if all required fields are provided
         if (!fullName || !email || !password) {
             return errorHandler(
@@ -39,6 +39,7 @@ export const createNewUser = async (req, res) => {
             email,
             password: hashedPassword,
             phone,
+            userType:userType
         });
 
         //verification token;

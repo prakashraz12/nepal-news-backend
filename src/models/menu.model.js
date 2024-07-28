@@ -22,7 +22,7 @@ const menuSchema = new mongoose.Schema(
         isShownOnNavbar: {
             type: Boolean,
             default:true
-        }
+        },
     },
     { timestamps: true }
 );

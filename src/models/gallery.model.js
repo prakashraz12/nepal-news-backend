@@ -23,6 +23,11 @@ const gallerySchema = new mongoose.Schema(
                 type: String,
             },
         ],
+        slug: {
+            type: String,
+            required: true,
+            unique:true
+        },
         recommendedNews: [
             {
                 type: mongoose.Types.ObjectId,

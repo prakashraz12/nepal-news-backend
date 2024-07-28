@@ -13,7 +13,7 @@ const router = Router();
 //routes to create story news
 router.post("/create", verifyJWT, upload.single("file"), createStoryNews);
 
-router.get("/getAll", getAllStoryNews);
+router.post("/getAll", getAllStoryNews);
 
 // routes to get storyNews by id;
 router.get("/get/:id", getStoryNewsById);

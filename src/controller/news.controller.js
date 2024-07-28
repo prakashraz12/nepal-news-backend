@@ -6,7 +6,8 @@ import { SubMenu } from "../models/subMenu.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.utils.js";
 import { errorHandler } from "../utils/error-handler.util.js";
 import { responseHandler } from "../utils/response-handler.util.js";
-
+import slugify from "slugify";
+import { slugGenerator } from "../utils/slug-generator.utils.js";
 export const createNews = async (req, res) => {
     try {
         const logedInUser = req?.user;
@@ -24,8 +25,16 @@ export const createNews = async (req, res) => {
             subMenu,
             province,
             isShowNewsOnProvince,
+            slug,
         } = req.body;
 
+        const slugifed_string = slugify(slug, {
+            remove: undefined,
+            lower: true, // convert to lower case, defaults to `false`
+            strict: false, // strip special characters except replacement, defaults to `false`
+            locale: "vi", // language code of the locale to use
+            trim: true,
+        });
         if (req?.file) {
             const bannerImage = req.file?.path;
             const cloudinaryUpload = await uploadOnCloudinary(bannerImage);
@@ -47,6 +56,7 @@ export const createNews = async (req, res) => {
             subMenu,
             province,
             isShowNewsOnProvince,
+            slug:slugifed_string
         });
 
         const savedNews = await newNews.save();
@@ -129,7 +139,7 @@ export const getAllNews = async (req, res) => {
         const totalPages = Math.ceil(count / limit);
 
         const allNews = await News.find(query)
-            .select("newsTitle shortDescription createdAt bannerImage")
+            .select("newsTitle shortDescription createdAt bannerImage menu subMenu isPublished isHighlighted isShowNewsOnProvince isDraft")
             .skip((page - 1) * limit)
             .limit(limit)
             .sort({ createdAt: sort && sort === "asc" ? 1 : -1 })
@@ -467,5 +477,29 @@ export const shareCountIncreament = async (req, res) => {
         responseHandler(200, "share count inc successfully", news, res);
     } catch (error) {
         errorHandler(500, error.message, res);
+    }
+};
+
+export const bulkNewsUpdate = async (req, res) => {
+    try {
+        const newsToUpdate = await News.find();
+
+        console.log(`Found ${newsToUpdate.length} news to update.`);
+
+        // Now update each news document with the actual slug
+        for (let item of newsToUpdate) {
+            const slug = slugGenerator(
+                "Jhala Nath Khanal withdraws candidacy for party President, endorses Ghanashyam Bhusal"
+            );
+
+            console.log("s", slug);
+
+            // item.slug = slug;
+            // await item.save(); // Wait for the save operation to complete
+        }
+
+        res.status(200).json({ message: "o9k" });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
 };

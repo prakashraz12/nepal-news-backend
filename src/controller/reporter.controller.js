@@ -5,14 +5,18 @@ import { errorHandler } from "../utils/error-handler.util.js";
 import { responseHandler } from "../utils/response-handler.util.js";
 import { transporter } from "../utils/nodemailer.js";
 import { Reporter } from "../models/reporter.model.js";
-
+import { User } from "../models/user.model.js";
+import { Gallery } from "../models/gallery.model.js";
+import { CoverStory } from "../models/cover-story.model.js";
+import { Story } from "../models/storyNews.model.js";
+import { News } from "../models/news.model.js";
+import { uploadOnCloudinary } from "../utils/cloudinary.utils.js";
 // reportter create
 export const createNewReporter = async (req, res) => {
     try {
         const { fullName, email, phone, password } = req.body;
         // Check if all required fields are provided
         if (!fullName || !email || !password) {
-          
             return errorHandler(
                 400,
                 "Please fill all required fields (e.g., email, password, fullname)",
@@ -20,7 +24,7 @@ export const createNewReporter = async (req, res) => {
             );
         }
         // Check if user already exists in the database
-        const existingUser = await Reporter.findOne({ email: email });
+        const existingUser = await User.findOne({ email: email });
         // If user already exists, return error
         if (existingUser) {
             return errorHandler(
@@ -50,14 +54,6 @@ export const createNewReporter = async (req, res) => {
         newUser.verificationToken = verificationToken;
         await newUser.save();
 
-        // Send verification email
-        const verificationURL = `http://localhost:3000/auth/verify-email-page/${verificationToken}`;
-        await transporter.sendMail({
-            to: email,
-            subject: "Verify Your Email Address",
-            html: `Please click on this link to verify your email address: <a href="${verificationURL}">${verificationURL}</a>`,
-        });
-
         // Return success response
         return responseHandler(201, "User created successfully", newUser, res);
     } catch (error) {
@@ -70,9 +66,15 @@ export const loginReporter = async (req, res) => {
     try {
         const { email, password } = req.body;
         //find user
-        const findUser = await Reporter.findOne({ email });
+        const findUser = await User.findOne({ email });
         if (!findUser) {
             return errorHandler(404, "User not found", res);
+        }
+
+        const isUserReporter =
+            findUser?.userType === "reporter" || findUser?.userType === "admin";
+        if (!isUserReporter) {
+            return errorHandler(403, "you are not authorized person", res);
         }
         //compare password;
         const isPasswordMatched = await bcrypt.compare(
@@ -87,7 +89,7 @@ export const loginReporter = async (req, res) => {
 
         //create jwtToken;
         const token = jwt.sign(
-            { userId: findUser?._id, role:findUser?.userType },
+            { userId: findUser?._id, role: findUser?.userType },
             process.env.JWT_SECRET,
             {
                 expiresIn: "90d",
@@ -100,6 +102,7 @@ export const loginReporter = async (req, res) => {
             secure: true,
             maxAge: 90 * 24 * 60 * 60 * 1000,
         });
+
         //extract password and usertype and unneeded fields from resposne
         const formattedData = {
             fullName: findUser?.fullName,
@@ -111,6 +114,7 @@ export const loginReporter = async (req, res) => {
         const data = {
             token,
             user: formattedData,
+            role: findUser?.userType,
         };
 
         return responseHandler(200, "User logedIn Successfully", data, res);
@@ -120,7 +124,7 @@ export const loginReporter = async (req, res) => {
 };
 
 //forgot password
-export const forgotPassword = async (req, res) => {
+export const reporterForgetPassword = async (req, res) => {
     try {
         const { email } = req.body;
         // Generate reset token
@@ -128,7 +132,7 @@ export const forgotPassword = async (req, res) => {
             expiresIn: "10m",
         });
 
-        const user = await Reporter.findOneAndUpdate(
+        const user = await User.findOneAndUpdate(
             { email },
             { resetToken, resetTokenExpires: Date.now() + 600000 }
         );
@@ -137,7 +141,7 @@ export const forgotPassword = async (req, res) => {
             return errorHandler(404, "User not found", res);
         }
         // Send reset password email
-        const resetURL = `http://localhost:3000/auth/reset-password-page/${resetToken}`;
+        const resetURL = `http://localhost:5173/auth/reset-password-page/${resetToken}`;
         await transporter.sendMail({
             to: email,
             subject: "Reset Your Password",
@@ -150,120 +154,460 @@ export const forgotPassword = async (req, res) => {
     }
 };
 
-//reset password;
-export const resetPassword = async (req, res) => {
+export const getReporters = async (req, res) => {
+    const { page = 1, limit = 10, name } = req.body;
     try {
-        const { token, password } = req.body;
-        // Find user by reset token and ensure it's not expired
-        const user = await Reporter.findOne({
-            resetToken: token,
-            resetTokenExpires: { $gt: Date.now() },
-        });
+        const skip = (page - 1) * limit;
 
-        if (!user) {
-            return errorHandler(
-                400,
-                "Reset token is invalid or has expired",
-                res
-            );
+        let query = { userType: "reporter" };
+
+        if (name) {
+            query.fullName = { $regex: new RegExp(name, "i") };
         }
-        const resposeData = {};
-        // Update user's password
-        user.password = password;
-        user.resetToken = undefined;
-        user.resetTokenExpires = undefined;
-        await user.save();
-        return responseHandler(
-            200,
-            "Password reset successfully",
-            resposeData,
-            res
-        );
+
+        const reporters = await User.find(query)
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit);
+
+        if (!reporters || reporters.length === 0) {
+            return errorHandler(404, "Reporters not found", res);
+        }
+
+        responseHandler(200, "Reporters fetched", reporters, res);
     } catch (error) {
         errorHandler(500, error.message, res);
     }
 };
 
-// Email Verification;
-export const verifyEmail = async (req, res) => {
+export const getReporterById = async (req, res) => {
     try {
-        const { token } = req.params;
-
-        if (!token) {
-            return errorHandler(400, "Token is not provided", res);
-        }
-        //check if token is varifed or not;
-        const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
-        // if (decodedToken == null) {
-        // }
-        // Find user by verification token
-        const user = await Reporter.findOneAndUpdate(
-            { verificationToken: token },
-            { $set: { isVerified: true } }
-        );
-
-        if (!user) {
-            return errorHandler(400, "Verification token is invalid", res);
+        const { id } = req.params;
+        if (!id) {
+            return errorHandler(400, "id is required", res);
         }
 
-        const responseData = {};
-        return responseHandler(
-            200,
-            "Email verified successfully",
-            responseData,
-            res
+        const reporter = await User.findById(id).select(
+            "fullName email phone bio isBlocked userType"
         );
+
+        if (!reporter) {
+            return errorHandler(404, "reporter not found", res);
+        } else if (reporter.userType !== "reporter") {
+            return errorHandler(404, "user is not reporter", res);
+        }
+        responseHandler(200, "reporetr fetched", reporter, res);
+    } catch (error) {
+        errorHandler(500, error?.message, res);
+    }
+};
+
+export const updateReporter = async (req, res) => {
+    const { fullName, email, phone, bio, userId, isBlocked } = req.body;
+    try {
+        const logedInUser = req.user;
+        const role = req.role;
+
+        const findUser = await User.findById(userId);
+
+        if (!findUser) {
+            return errorHandler(404, "user not found", res);
+        }
+        if (
+            findUser?._id?.toString() === logedInUser?.toString() ||
+            role !== "admin"
+        ) {
+            return errorHandler(403, "you are not authorised person", res);
+        }
+
+        if (req?.file) {
+            const bannerImage = req.file?.path;
+            const cloudinaryUpload = await uploadOnCloudinary(bannerImage);
+            findUser.avatar = cloudinaryUpload?.secure_url;
+        }
+
+        findUser.fullName = fullName;
+        findUser.email = email;
+        findUser.phone = phone;
+        findUser.bio = bio;
+        findUser.isBlocked = isBlocked;
+
+        await findUser.save();
+        const response = {
+            fullName: findUser.fullName,
+            email: findUser.email,
+            phone: findUser.phone,
+            avatar: findUser?.avatar,
+            bio: findUser?.bio,
+        };
+        responseHandler(200, "user's data udpated", response, res);
     } catch (error) {
         errorHandler(500, error.message, res);
     }
 };
 
-//resentToken;
-export const ResendVerifyEmail = async (req, res) => {
+export const getReporter = async (req, res) => {
     try {
-        const { token } = req.params;
-
-        if (!token) {
-            return errorHandler(400, "Token is not provided", res);
-        }
-
-        // Find the user associated with the provided verification token
-        const user = await Reporter.findOne({ verificationToken: token });
-
-        if (!user) {
-            return errorHandler(404, "User not found", res);
-        }
-
-        //check if user already verifed or not
-        if (user?.isVerified === true) {
-            return errorHandler(500, "User already verified");
-        }
-        const newVerificationToken = await jwt.sign(
-            { email: user.email },
-            process.env.JWT_SECRET,
-            { expiresIn: "10m" }
+        const user = req.user;
+        const findReporter = await User.findById(user).select(
+            "fullName email phone bio avatar"
         );
-
-        // Update user's verification token and save to database
-        user.verificationToken = newVerificationToken;
-        await user.save();
-
-        // Send new verification email with updated token
-        const verificationURL = `http://localhost:3000/auth/verify-email-page/${newVerificationToken}`;
-        await transporter.sendMail({
-            to: user.email,
-            subject: "Resend Verification Email",
-            html: `Your verification token has expired. Please click on this link to verify your email address: <a href="${verificationURL}">${verificationURL}</a>`,
-        });
-
-        const responseData = {};
-        return responseHandler(
-            200,
-            "Verification email resent successfully with new token",
-            responseData,
-            res
-        );
+        if (!findReporter) {
+            return errorHandler(404, "reporter not found", res);
+        }
+        responseHandler(200, "reporter data fetched", findReporter, res);
     } catch (error) {
         errorHandler(500, error.message, res);
+    }
+};
+
+export const searchReporterNews = async (req, res) => {
+    try {
+        let {
+            page,
+            rowsPerPage,
+            newsTitle,
+            isPublished,
+            isDraft,
+            isHighlighted,
+            province,
+            startDate,
+            endDate,
+            menu,
+            sort,
+            isShowNewsOnProvince,
+            subMenu,
+        } = req.body;
+
+        page = parseInt(page) || 1;
+        const limit = parseInt(rowsPerPage) || 10;
+
+        const query = {};
+        query.owner = req.user;
+        if (menu?.length !== 0 && menu !== undefined) {
+            query.menu = menu;
+        }
+        if (subMenu?.length !== 0 && subMenu !== undefined) {
+            query.subMenu = subMenu;
+        }
+
+        if (newsTitle && newsTitle?.length !== 0) {
+            query.newsTitle = { $regex: newsTitle, $options: "i" };
+        }
+        if (isPublished !== undefined) {
+            query.isPublished = isPublished;
+        }
+        if (isHighlighted !== undefined) {
+            query.isHighlighted = isHighlighted;
+        }
+
+        if (isDraft !== undefined) {
+            query.isDraft = isDraft;
+        }
+
+        if (province !== undefined && province.length !== 0) {
+            query.province = province;
+        }
+
+        if (isShowNewsOnProvince !== undefined) {
+            query.isShowNewsOnProvince = isShowNewsOnProvince;
+        }
+        // Add date range query
+        if (startDate && endDate) {
+            // Convert to ISO format
+            const startTime = new Date(startDate).setHours(0, 0, 0, 0); // Start time is 00:00:00
+            const endTime = new Date(endDate).setHours(23, 59, 59, 999); // End time is 23:59:59
+            query.createdAt = { $gte: startTime, $lte: endTime };
+        }
+
+        const count = await News.countDocuments(query);
+        const totalPages = Math.ceil(count / limit);
+
+        const allNews = await News.find(query)
+            .skip((page - 1) * limit)
+            .limit(limit)
+            .sort({ createdAt: sort && sort === "asc" ? 1 : -1 })
+            .populate("owner", "avatar fullName");
+
+        res.status(200).json({
+            data: allNews,
+            totalPages,
+            currentPage: page,
+            totalLength: count,
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+export const searchReporterGalleryNews = async (req, res) => {
+    try {
+        let {
+            page,
+            rowsPerPage,
+            newsTitle,
+            isPublished,
+            isDraft,
+            isHighlighted,
+            province,
+            startDate,
+            endDate,
+            menu,
+            sort,
+            isShowNewsOnProvince,
+            subMenu,
+        } = req.body;
+
+        page = parseInt(page) || 1;
+        const limit = parseInt(rowsPerPage) || 10;
+
+        const query = {};
+        query.owner = req.user;
+        if (menu?.length !== 0 && menu !== undefined) {
+            query.menu = menu;
+        }
+        if (subMenu?.length !== 0 && subMenu !== undefined) {
+            query.subMenu = subMenu;
+        }
+
+        if (newsTitle && newsTitle?.length !== 0) {
+            query.newsTitle = { $regex: newsTitle, $options: "i" };
+        }
+        if (isPublished !== undefined) {
+            query.isPublished = isPublished;
+        }
+        if (isHighlighted !== undefined) {
+            query.isHighlighted = isHighlighted;
+        }
+
+        if (isDraft !== undefined) {
+            query.isDraft = isDraft;
+        }
+
+        if (province !== undefined && province.length !== 0) {
+            query.province = province;
+        }
+
+        if (isShowNewsOnProvince !== undefined) {
+            query.isShowNewsOnProvince = isShowNewsOnProvince;
+        }
+        // Add date range query
+        if (startDate && endDate) {
+            // Convert to ISO format
+            const startTime = new Date(startDate).setHours(0, 0, 0, 0); // Start time is 00:00:00
+            const endTime = new Date(endDate).setHours(23, 59, 59, 999); // End time is 23:59:59
+            query.createdAt = { $gte: startTime, $lte: endTime };
+        }
+
+        const count = await Gallery.countDocuments(query);
+        const totalPages = Math.ceil(count / limit);
+
+        const allNews = await Gallery.find(query)
+            .skip((page - 1) * limit)
+            .limit(limit)
+            .sort({ createdAt: sort && sort === "asc" ? 1 : -1 })
+            .populate("owner", "avatar fullName");
+
+        res.status(200).json({
+            data: allNews,
+            totalPages,
+            currentPage: page,
+            totalLength: count,
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+export const getReporterCoverStoryNews = async (req, res) => {
+    try {
+        let {
+            page,
+            rowsPerPage,
+            newsTitle,
+            isPublished,
+            isDraft,
+            isHighlighted,
+            province,
+            startDate,
+            endDate,
+            menu,
+            sort,
+            isShowNewsOnProvince,
+            subMenu,
+        } = req.body;
+
+        page = parseInt(page) || 1;
+        const limit = parseInt(rowsPerPage) || 10;
+
+        const query = {};
+        query.owner = req.user;
+        if (menu?.length !== 0 && menu !== undefined) {
+            query.menu = menu;
+        }
+        if (subMenu?.length !== 0 && subMenu !== undefined) {
+            query.subMenu = subMenu;
+        }
+
+        if (newsTitle && newsTitle?.length !== 0) {
+            query.newsTitle = { $regex: newsTitle, $options: "i" };
+        }
+        if (isPublished !== undefined) {
+            query.isPublished = isPublished;
+        }
+        if (isHighlighted !== undefined) {
+            query.isHighlighted = isHighlighted;
+        }
+
+        if (isDraft !== undefined) {
+            query.isDraft = isDraft;
+        }
+
+        if (province !== undefined && province.length !== 0) {
+            query.province = province;
+        }
+
+        if (isShowNewsOnProvince !== undefined) {
+            query.isShowNewsOnProvince = isShowNewsOnProvince;
+        }
+        // Add date range query
+        if (startDate && endDate) {
+            // Convert to ISO format
+            const startTime = new Date(startDate).setHours(0, 0, 0, 0); // Start time is 00:00:00
+            const endTime = new Date(endDate).setHours(23, 59, 59, 999); // End time is 23:59:59
+            query.createdAt = { $gte: startTime, $lte: endTime };
+        }
+
+        const count = await CoverStory.countDocuments(query);
+        const totalPages = Math.ceil(count / limit);
+
+        const allNews = await CoverStory.find(query)
+            .skip((page - 1) * limit)
+            .limit(limit)
+            .sort({ createdAt: sort && sort === "asc" ? 1 : -1 })
+            .populate("owner", "avatar fullName");
+
+        res.status(200).json({
+            data: allNews,
+            totalPages,
+            currentPage: page,
+            totalLength: count,
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+export const getAllReporterStoryNews = async (req, res) => {
+    try {
+        let {
+            page,
+            rowsPerPage,
+            newsTitle,
+            isPublished,
+            isDraft,
+            isHighlighted,
+            province,
+            startDate,
+            endDate,
+            menu,
+            sort,
+            isShowNewsOnProvince,
+            subMenu,
+        } = req.body;
+
+        page = parseInt(page) || 1;
+        const limit = parseInt(rowsPerPage) || 10;
+
+        const query = {};
+        query.owner = req.user;
+        if (menu?.length !== 0 && menu !== undefined) {
+            query.menu = menu;
+        }
+        if (subMenu?.length !== 0 && subMenu !== undefined) {
+            query.subMenu = subMenu;
+        }
+
+        if (newsTitle && newsTitle?.length !== 0) {
+            query.newsTitle = { $regex: newsTitle, $options: "i" };
+        }
+        if (isPublished !== undefined) {
+            query.isPublished = isPublished;
+        }
+        if (isHighlighted !== undefined) {
+            query.isHighlighted = isHighlighted;
+        }
+
+        if (isDraft !== undefined) {
+            query.isDraft = isDraft;
+        }
+
+        if (province !== undefined && province.length !== 0) {
+            query.province = province;
+        }
+
+        if (isShowNewsOnProvince !== undefined) {
+            query.isShowNewsOnProvince = isShowNewsOnProvince;
+        }
+        // Add date range query
+        if (startDate && endDate) {
+            // Convert to ISO format
+            const startTime = new Date(startDate).setHours(0, 0, 0, 0); // Start time is 00:00:00
+            const endTime = new Date(endDate).setHours(23, 59, 59, 999); // End time is 23:59:59
+            query.createdAt = { $gte: startTime, $lte: endTime };
+        }
+
+        const count = await Story.countDocuments(query);
+        const totalPages = Math.ceil(count / limit);
+
+        const allNews = await Story.find(query)
+            .skip((page - 1) * limit)
+            .limit(limit)
+            .sort({ createdAt: sort && sort === "asc" ? 1 : -1 })
+            .populate("owner", "avatar fullName");
+
+        res.status(200).json({
+            data: allNews,
+            totalPages,
+            currentPage: page,
+            totalLength: count,
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+export const meReporterUpdate = async (req, res) => {
+    try {
+        const { fullName, email, phone, bio, avatar } = req.body;
+        const user = req.user;
+        const findUser = await User.findById(user);
+        if (!findUser) {
+            return errorHandler(404, "reporter not found", res);
+        }
+        if (req?.file) {
+            const bannerImage = req.file?.path;
+            const cloudinaryUpload = await uploadOnCloudinary(bannerImage);
+            findUser.avatar = cloudinaryUpload?.secure_url;
+        } else {
+            findUser.avatar = avatar;
+        }
+
+        findUser.fullName = fullName;
+        findUser.email = email;
+        findUser.phone = phone;
+        findUser.bio = bio;
+
+        await findUser.save();
+        const response = {
+            fullName: findUser.fullName,
+            email: findUser.email,
+            phone: findUser.phone,
+            avatar: findUser?.avatar,
+            bio: findUser?.bio,
+        };
+        responseHandler(200, "user's data udpated", response, res);
+    } catch (error) {
+        errorHandler(500, error?.message, res);
     }
 };

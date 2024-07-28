@@ -40,6 +40,27 @@ export const createAds = async (req, res) => {
     }
 };
 
+export const getAllAds = async (req, res) => {
+    try {
+        // Fetch paginated ads
+        const ads = await Ads.find();
+
+        // Count total number of ads
+        const totalAds = await Ads.countDocuments();
+
+        responseHandler(
+            200,
+            "Ads fetched successfully",
+            {
+                ads,
+            },
+            res
+        );
+    } catch (error) {
+        errorHandler(500, error.message, res);
+    }
+};
+
 export const getAdsByPosition = async (req, res) => {
     try {
         const { position } = req.params;
@@ -85,7 +106,7 @@ export const clickedCountOnAds = async (req, res) => {
 export const updateAds = async (req, res) => {
     try {
         const { adsId, adsUrl, adsImage, adsPosition } = req.body;
-     
+
         if (!adsId) {
             return errorHandler(400, "Ads ID required", res);
         }
@@ -115,19 +136,19 @@ export const updateAds = async (req, res) => {
     }
 };
 
-export const deleteAds = async(req, res) => {
+export const deleteAds = async (req, res) => {
     try {
         const { id } = req.params;
         if (!id) {
-            return errorHandler(404, "id is required", res)
+            return errorHandler(404, "id is required", res);
         }
         const findAds = await Ads.findByIdAndDelete(id);
         if (!findAds) {
-            return responseHandler(404,"ads is not found", res)
+            return responseHandler(404, "ads is not found", res);
         }
-        const response = {}
-        responseHandler(200, "ads deleted", response, res )
+        const response = {};
+        responseHandler(200, "ads deleted", response, res);
     } catch (error) {
-        errorHandler(500, error?.message, res)
+        errorHandler(500, error?.message, res);
     }
-}
+};

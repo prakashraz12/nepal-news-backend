@@ -18,6 +18,7 @@ export const verifyJWT = async (req, res, next) => {
             }
             req.user = decoded?.userId;
             req.role = decoded?.role;
+            console.log(req.role)
             next();
         });
     } catch (error) {
