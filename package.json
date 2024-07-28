@@ -25,7 +25,8 @@
   },
   "scripts": {
     "lint": "npx eslint '*'",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "docker-publish": "docker build -t roshankarki9993/news-backend:v3 --platform linux/arm64 . && docker push roshankarki9993/news-backend:v3"
   },
   "author": "",
   "license": "ISC"

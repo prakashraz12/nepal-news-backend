@@ -1,0 +1,20 @@
+version: "3.9"
+services:
+  serverApi:
+    image: roshankarki9993/news-backend:v1
+    container_name: news-backend-server
+    command: node src/index.js
+    env_file:
+      - ./.env
+    environment:
+      - NODE_OPTIONS=--max-old-space-size=4096
+    ports:
+      - "8000:8000"
+    networks:
+      - news-network
+networks:
+  news-network:
+    driver: bridge
+
+
+
