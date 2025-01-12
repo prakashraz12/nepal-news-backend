@@ -8,6 +8,7 @@ const allowedOrigins = [
     "https://news-next-bsc38jks7-prakashraz12s-projects.vercel.app",
     "https://news-next-js-three.vercel.app",
     "https://news-super-admin.vercel.app/",
+    "https://news-super-admin.vercel.app"
 ];
 //app init
 const app = express();
